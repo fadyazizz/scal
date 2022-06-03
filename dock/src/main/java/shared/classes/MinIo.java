@@ -21,7 +21,7 @@ public class MinIo {
         String minioHost=System.getenv("MINIO_HOST");
         String minioRootUser=System.getenv("MINIO_ROOT_USER");
         String minioRootPassword=System.getenv("MINIO_ROOT_PASSWORD");
-        CONFIG.put("MINIO_HOST",minioHost==null?"http://127.0.0.1:9000":minioHost );
+        CONFIG.put("MINIO_HOST",minioHost==null?"http://minio:9000":minioHost );
         CONFIG.put("MINIO_ROOT_USER", minioRootUser==null?"minioadmin":minioRootUser);
         CONFIG.put("MINIO_ROOT_PASSWORD", minioRootPassword==null?"minioadmin":minioRootPassword);
     }

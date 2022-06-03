@@ -8,7 +8,7 @@ import io.netty.util.CharsetUtil;
 import io.quarkus.arc.impl.Reflections;
 import org.json.JSONObject;
 import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
+
 import scalable.com.Interfaces.Hook;
 import scalable.com.rabbitMQ.RabbitMQApp;
 import scalable.com.rabbitMQ.RabbitMQCommunicatorApp;
@@ -33,7 +33,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
-
+import org.json.simple.parser.ParseException;
 public abstract class App  {
 
 public Properties properties;

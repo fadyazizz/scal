@@ -3,6 +3,7 @@ package com.databaseHelper;
 
 
 import org.apache.ibatis.jdbc.ScriptRunner;
+import shared.App;
 import shared.classes.PostgresConnection;
 
 import java.io.*;
@@ -12,7 +13,7 @@ import java.sql.Statement;
 
 public class DatabaseHelper {
 
-    public static void createSchema() throws SQLException, FileNotFoundException {
+    public static void createSchema(App app) throws SQLException, FileNotFoundException {
 
               Connection connection = PostgresConnection.getDataSource().getConnection();
               //connection.
@@ -20,13 +21,15 @@ public class DatabaseHelper {
               ScriptRunner sr = new ScriptRunner(connection);
               String[] tables=new String[]{"userTable","blockedTable"};
              for(int i=0;i< tables.length;i++) {
-                 Reader reader = new BufferedReader(new FileReader(getAbsolutePath(tables[i])));
+                 InputStream inputStream = app.getClass().getClassLoader().getResourceAsStream("sql/"+tables[i]+".sql");
+                 BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+                
                  sr.runScript(reader);
              }
              
           }
 
-          public static void createProcs() throws IOException, SQLException {
+          public static void createProcs(App app) throws IOException, SQLException {
               Connection connection = PostgresConnection.getDataSource().getConnection();
              
 
@@ -34,7 +37,8 @@ public class DatabaseHelper {
               String[] tables=new String[]{"blockUser","DeleteAccount","subscribeToPremium","unsubscribeToPremium","updateAccount","userRegister"};
               for(int i=0;i< tables.length;i++) {
                       String statement="";
-                  BufferedReader reader = new BufferedReader(new FileReader(getAbsolutePath(tables[i])));
+                  InputStream inputStream = app.getClass().getClassLoader().getResourceAsStream("sql/"+tables[i]+".sql");
+                  BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
                       String strCurrentLine;
 
                       while ((strCurrentLine = reader.readLine()) != null) {
@@ -53,13 +57,7 @@ public class DatabaseHelper {
               
 
           }
-          public static String getAbsolutePath(String fileName){
-              ClassLoader classLoader = DatabaseHelper.class.getClassLoader();
-
-              File file = new File(classLoader.getResource("sql/" + fileName + ".sql").getFile());
-              //System.out.println(file.getAbsolutePath());
-              return file.getAbsolutePath();
-          }
+    
 
     
 }

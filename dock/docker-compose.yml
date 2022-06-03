@@ -1,0 +1,62 @@
+version: "3.1"
+services:
+   db:
+      image: postgres:14.1-alpine
+      restart: always
+      hostname: db
+      environment:
+         - POSTGRES_USER=postgres
+         - POSTGRES_PASSWORD=postgres
+      ports:
+         - 5432:5432
+      volumes:
+         - db:/var/lib/postgresql/data
+
+      networks:
+         - resolute
+
+   rabbitmq-container:
+      image: rabbitmq:3.5.3-management
+      hostname: rabbitmq-container
+      ports:
+         - 5673:5673
+         - 5672:5672
+         - 15672:15672
+      
+      networks:
+         - resolute
+   minio:
+      image: "minio/minio"
+      hostname: minio
+      command: [ "server", "/data" ]
+      restart: always
+      
+      volumes:
+         - "minio_data:/data"
+      networks:
+         - resolute
+
+   dock1-jar-with-dependencies-container:
+      image: dock1-jar-with-dependencies
+      ports:
+         - 5001:8080
+      
+      environment:
+         - rabbitMQ_host=rabbitmq-container
+      depends_on:
+         - rabbitmq-container
+         - db
+         - minio
+      volumes:
+         - /var/run/docker.sock:/var/run/docker.sock
+
+      networks:
+         - resolute
+networks:
+   resolute:
+      external:
+         name: resolute
+volumes:
+   db:
+      driver: local
+   minio_data:

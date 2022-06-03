@@ -124,8 +124,8 @@ public class PostgresConnection {
 
             try {
                 URI dbUri = new URI(System.getenv("postgres:root@127.0.0.1:5432/postgres"));
-                DB_USERNAME = dbUri.getUserInfo().split(":")[0];
-                DB_PASSWORD = dbUri.getUserInfo().split(":")[1];
+                DB_USERNAME = "postgres";
+                DB_PASSWORD = "postgres";
                 DB_NAME = dbUri.getPath().replace("/", "");
                 DB_URL = "jdbc:postgresql://" + dbUri.getHost() + ':' + dbUri.getPort() + dbUri.getPath();
 
@@ -187,7 +187,7 @@ public class PostgresConnection {
     }
 
     public void setDBPassword() {
-        String password=System.getenv("postgres_password")==null?"root":System.getenv("postgres_password");
+        String password=System.getenv("postgres_password")==null?"postgres":System.getenv("postgres_password");
         DB_PASSWORD = password;
     }
 
@@ -219,7 +219,7 @@ public class PostgresConnection {
     public String getDbMaxConnections(){return DB_MAX_CONNECTIONS;}
 
     private boolean formatURL() {
-        setDBURL("jdbc:postgresql://" + DB_HOST + ":" + DB_PORT + "/" + DB_NAME);
+        setDBURL("jdbc:postgresql://" + "db" + ":" + DB_PORT + "/" + DB_NAME);
         System.out.println("database url..."+DB_URL);
         Pattern pattern = Pattern.compile("^\\w+:\\w+:\\/{2}\\d+.\\d+.\\d+.\\d+:\\d+\\/\\w+(?:\\W|\\w)*$");
         Matcher matcher = pattern.matcher(DB_URL);

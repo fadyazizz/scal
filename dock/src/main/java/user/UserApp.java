@@ -19,8 +19,8 @@ public class UserApp extends App {
             app.start();
             
            //TODO comment this line after development
-            DatabaseHelper.createSchema();
-            DatabaseHelper.createProcs();
+            DatabaseHelper.createSchema(app);
+            DatabaseHelper.createProcs(app);
 
 
         }
@@ -29,7 +29,7 @@ public class UserApp extends App {
     @Override
     protected String getAppName() {
         return "User";
-    }
+    }                               
 
  
 

@@ -74,11 +74,16 @@ public  void start() throws IOException, TimeoutException, ClassNotFoundExceptio
          
    
    System.out.println("resources");
+    try {
+        Thread.sleep(5000);
+    } catch (InterruptedException e) {
+        throw new RuntimeException(e);
+    }
       initProperties();
       this.dbInit();
       this.classManager.init();
       appController=new Controller(this);
-   
+
     this.initRabbitMQ();
     
     this.threadsManager=new ThreadPoolManager();
@@ -116,6 +121,8 @@ protected void initProperties() {
         }
     }
 protected void readDefaultProperties(){
+    System.out.println("reading default properties "+System.getenv(AppsConstants.RabbitMQ_Host_PropertyName));
+    
     String rabbitmqHost=System.getenv(AppsConstants.RabbitMQ_Host_PropertyName);
     this.properties.put(AppsConstants.RabbitMQ_Host_PropertyName,rabbitmqHost==null?AppsConstants.RABBITMQ_HOST_DEFAULT_VALUE:rabbitmqHost);
 
