@@ -1,7 +1,9 @@
 package user;
 
-import scalable.com.databaseHelper.DatabaseHelper;
-import scalable.com.shared.App;
+
+
+import com.databaseHelper.DatabaseHelper;
+import shared.App;
 
 import java.io.IOException;
 import java.sql.SQLException;

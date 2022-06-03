@@ -1,10 +1,12 @@
 package user.commands;
 
-import scalable.com.exceptions.ValidationException;
-import scalable.com.shared.classes.MinIo;
-import scalable.com.shared.classes.PostgresConnection;
-import scalable.com.shared.classes.Responder;
-import scalable.com.user.UserApp;
+
+
+import com.exceptions.ValidationException;
+import shared.classes.MinIo;
+import shared.classes.PostgresConnection;
+import shared.classes.Responder;
+import user.UserApp;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

@@ -1,7 +1,12 @@
 package user.commands;
 
+import com.exceptions.ValidationException;
 import org.json.JSONObject;
-import scalable.com.exceptions.ValidationException;
+import shared.classes.ByCryptHelper;
+import shared.classes.JWTHandler;
+import shared.classes.PostgresConnection;
+import shared.classes.Responder;
+
 
 import javax.validation.constraints.NotBlank;
 import java.sql.Connection;

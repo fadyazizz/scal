@@ -14,18 +14,21 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.concurrent.TimeoutException;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class UserAppTest {
     
     static String username = "fady"+ new Date().getTime();
     static String password = "12345678";
-    static String token="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6IjE1IiwiaXNBcnRpc3QiOiJ0cnVlIn0.7Ku_-aMNMxhD9T_3uiEEOeBGnkqFFyZrsNM2VU6Ng_s";
+    static String token;
     static String firstname="7amo";
     static String lastname="bikaaaa";
     static boolean isArtist=false;
     static String email=username+"@gmail.com";
+    static String id;
+    static String photo_url;
    
     @BeforeClass
     public static void createSetup() throws IOException, ClassNotFoundException, TimeoutException {
@@ -45,191 +48,232 @@ public class UserAppTest {
     public void T01_SignUpCreatesAnEntryInDB() {
 
 
-      
-        
-
-
         JSONObject response = Requester.callSignUpCommand(username, email, password,firstname,lastname,false);
         System.out.println(response);
         assertEquals(200, response.getInt("statusCode"));
+        assertEquals("successfully registered", response.getString("msg"));
     }
 
-//    @Test
-//    public void T02_SignUpSameUser() {
-//
-//
-//        String email = username + "@gmail.com";
-//        String birthdate = "1997-12-14";
-//
-//
-//        JSONObject response = Requester.signUp(username, email, password, birthdate);
-//        int statusCode = response.getInt("statusCode");
-//        assertTrue(statusCode >= 500);
-//
-//        String msg = response.getString("msg");
-//        assertTrue(msg.contains("duplicate key"));
-//
-//    }
-
-//    @Test
-//    public void T03_SignUpMissingParam() {
-//
-//
-//        String email = username + "@gmail.com";
-//        String birthdate = null;
-//
-//
-//        JSONObject response = Requester.signUp(username, email, password, birthdate);
-//        int statusCode = response.getInt("statusCode");
-//        assertTrue(statusCode >= 400 && statusCode <= 500);
-//
-//        String msg = response.getString("msg");
-//        assertTrue(msg.contains("missing") && msg.contains("birthdate"));
-//
-//    }
-
-//    @Test
-//    public void T04_SignUpIncorrectlyFormattedDate() {
-//
-//
-//        String email = username + "@gmail.com";
-//        String birthdate = "14-12-1997";
-//
-//
-//        JSONObject response = Requester.signUp(username, email, password, birthdate);
-//        int statusCode = response.getInt("statusCode");
-//        assertTrue(statusCode >= 400 && statusCode <= 500);
-//
-//        String msg = response.getString("msg");
-//        assertTrue(msg.contains("birthdate must be of type SQL_DATE"));
-//
-//    }
-
     @Test
-    public void T05_GetUserWithoutLogin() {
+    public void T02_SignUpSameUser() {
 
-        JSONObject response = Requester.callViewMyProfileCommand();
-        System.out.println(response);
+
+        
+        
+
+
+        JSONObject response = Requester.callSignUpCommand(username, email, password,firstname,lastname,isArtist);
         int statusCode = response.getInt("statusCode");
+        assertTrue(statusCode == 406);
+
         String msg = response.getString("msg");
-        assertTrue(statusCode == 401 || statusCode == 403);
-        assertTrue(msg.contains("Unauthorized"));
+        assertTrue(msg.contains("username already exists"));
+
     }
 
     @Test
-    public void T06_Login() {
+    public void T03_SignUpMissingParam() {
 
 
-        JSONObject response = Requester.login(username, password);
+
+
+        JSONObject response = Requester.callSignUpCommand(username, email, password, firstname,null,false );
+        int statusCode = response.getInt("statusCode");
+        assertTrue(statusCode >= 400 && statusCode <= 500);
+
+        String msg = response.getString("msg");
+        assertTrue(msg.contains("missing") && msg.contains("lastname"));
+
+    }
+
+    @Test
+    public void T04_Login_with_Wrong_Pass() {
+
+
+        JSONObject response = Requester.login(email, password+"wrong");
+        assertTrue( response.getInt("statusCode")!=200);
+
+
+
+        assertEquals("wrong username or password", response.getString("msg"));
+
+
+
+    }
+    @Test
+    public void T05_Login() {
+
+
+        JSONObject response = Requester.login(email, password);
+
+        System.out.println(response);
         assertEquals(200, response.getInt("statusCode"));
-        assertEquals("Login Successful!", response.getString("msg"));
+        assertTrue(response.has("data"));
+        response=(JSONObject)response.get("data");
+       assertEquals(response.getString("first_name"),firstname);
+       assertEquals(response.getString("last_name"),lastname);
+       assertEquals(response.getString("username"),username);
+      
+
+       
         assertTrue(response.has("token"));
         token = response.getString("token");
-       //Requester.authenticationParams = AuthParamsHandler.decodeToken(token);
+        id=response.getString("id");
+        
     }
+ 
+
+
+
+     @Test
+     public void T06_ChangePasswordWithWrongOldPassword(){
+        JSONObject response=Requester.updatePassword(password+"wrong","newPassword");
+
+         assertEquals(response.getString("msg"),"old password is wrong");
+            
+     }
+    @Test
+    public void T07_ChangePassword(){
+        String newPassword="newPassword";
+        JSONObject response=Requester.updatePassword(password,newPassword);
+
+        assertEquals(200, response.getInt("statusCode"));
+        assertEquals(response.getString("msg"),"password changed successfully");
+        password=newPassword;
+        
+
+    }
+
+
 
     @Test
     public void T07_viewMyProfile() {
 
         JSONObject response = Requester.callViewMyProfileCommand();
+        System.out.println(response);
         assertEquals(200, response.getInt("statusCode"));
         JSONObject data = response.getJSONObject("data");
         assertEquals(username, data.getString("username"));
-       // assertTrue(Auth.verifyHash(password, data.getString("password")));
+        assertEquals(firstname, data.getString("first_name"));
+        assertEquals(lastname, data.getString("last_name"));
+        assertEquals(email, data.getString("email"));
+
 
     }
-
-
     @Test
-    public void T08_updatePassword() {
+    public void T08_viewAnotherUserProfile() {
 
-        String newPassword = "123456";
-
-        JSONObject response = Requester.updatePassword(password, newPassword);
+        JSONObject response = Requester.callViewAnotherProfile(username);
+        
         assertEquals(200, response.getInt("statusCode"));
+        JSONObject data = response.getJSONObject("data");
+        assertEquals(username, data.getString("username"));
+        assertEquals(firstname, data.getString("first_name"));
+        assertEquals(lastname, data.getString("last_name"));
+        assertEquals(email, data.getString("email"));
 
-        assertEquals("Account Updated Successfully!", response.getString("msg"));
 
-        JSONObject user = Requester.callViewMyProfileCommand().getJSONObject("data");
-        //assertTrue(Auth.verifyHash(newPassword, user.getString("password")));
     }
-
     @Test
-    public void T09_updatePasswordBack() {
-        JSONObject response = Requester.updatePassword("123456", password);
-        assertEquals(200, response.getInt("statusCode"));
-        assertEquals("Account Updated Successfully!", response.getString("msg"));
-    }
-
-    @Test
-    public void T10_newPasswordCannotMatchPreviousPassword() {
-        JSONObject response = Requester.updatePassword(password, password);
-        int statusCode = response.getInt("statusCode");
-        assertTrue(statusCode >= 400);
-        assertTrue(response.getString("msg").contains("cannot match"));
-    }
-
-    @Test
-    public void T11_updateProfilePicture() {
+    public void T09_addprofilePhoto() {
 
         JSONObject response = null;
         try {
             response = Requester.updateProfilePicture();
         } catch (IOException e) {
-            fail(e.getMessage());
+            throw new RuntimeException(e);
         }
+
         assertEquals(200, response.getInt("statusCode"));
-        String msg = response.getString("msg");
-        assertTrue(msg.startsWith("Profile Picture uploaded successfully"));
-       // assertTrue(msg.contains(Utilities.formatUUID(userId)));
+       assertTrue(response.getString("msg").contains("Profile Picture uploaded successfully. You can find at"));
+       photo_url=response.getString("msg").split("at ")[1];
+
     }
 
     @Test
-    public void T12_viewAnotherProfile() {
+    public void T10_viewMyProfileWithPicture() {
 
-        JSONObject response = Requester.viewAnotherProfile(username);
-        JSONObject user = Requester.callViewMyProfileCommand().getJSONObject("data");
+        JSONObject response = Requester.callViewMyProfileCommand();
+        System.out.println(response);
         assertEquals(200, response.getInt("statusCode"));
-        assertEquals(username, user.getString("username"));
-        //assertTrue(!Utilities.isDevelopmentMode() || user.has("photoUrl"));
-    }
+        JSONObject data = response.getJSONObject("data");
+        assertEquals(username, data.getString("username"));
+        assertEquals(firstname, data.getString("first_name"));
+        assertEquals(lastname, data.getString("last_name"));
+        assertEquals(email, data.getString("email"));
+        assertEquals(photo_url,data.getString("profile_photo"));
 
-    @Test
-    public void T13_deleteProfilePicture() {
 
-        //JSONObject response = Requester.deleteProfilePicture();
-//        JSONObject user = Requester.getUser().getJSONObject("data");
-//        assertEquals(200, response.getInt("statusCode"));
-//        assertEquals("Profile Picture deleted successfully", response.getString("msg"));
-//        assertFalse(user.has("photoUrl"));
     }
 
 
+
+
+
+
+
     @Test
-    public void T14_deleteAccount() {
+    public void T11_editProfile() {
+
+        JSONObject response = null;
+        try {
+            response = Requester.updateProfilePicture();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        assertEquals(200, response.getInt("statusCode"));
+        assertTrue(response.getString("msg").contains("Profile Picture uploaded successfully. You can find at"));
+        photo_url=response.getString("msg").split("at ")[1];
+    }
+    @Test
+    public void T12_subscribeToPremium() {
+       JSONObject response = Requester.subscribeToPremium();
+
+
+        assertEquals(200, response.getInt("statusCode"));
+        assertTrue(response.has("data"));
+
+        assertTrue(response.getJSONObject("data").has("newToken"));
+        String newToken=response.getJSONObject("data").getString("newToken");
+        token=newToken;
+        
+      
+    }
+
+
+
+
+
+
+
+    @Test
+    public void T13_deleteAccount() {
 
 
         JSONObject response = Requester.deleteAccount(password);
+        System.out.println(response);
         assertEquals(200, response.getInt("statusCode"));
 
-        assertEquals("Account Deleted Successfully!", response.getString("msg"));
+        assertEquals("Account deleted successfully", response.getString("msg"));
 
         JSONObject getUserResponse = Requester.callViewMyProfileCommand();
-        assertEquals("User not found!", getUserResponse.getString("msg"));
+        assertEquals("account not found", getUserResponse.getString("msg"));
     }
 
-//    @Test
-//    public void T15_signUpAfterDeleteWillFailWithSameUsername() {
-//
-//        String email = username + "@gmail.com";
-//        String birthdate = "1997-12-14";
-//        JSONObject response = Requester.signUp(username, email, password, birthdate);
-//        String msg = response.getString("msg");
-//        assertEquals("This username is already in use, please try another one.", msg);
-//        assertEquals(200, response.getInt("statusCode"));
-//        JSONObject getUserResponse = Requester.getUser();
-//        assertEquals("User not found!", getUserResponse.getString("msg"));
-//    }
+    @Test
+    public void T14_deleteAlreadyDeletedAccount() {
+
+
+        JSONObject response = Requester.deleteAccount(password);
+        assertEquals(404, response.getInt("statusCode"));
+
+        assertEquals("account already deleted", response.getString("msg"));
+
+    }
+    
+
+
 
     @AfterClass
     public static void deleteFromPostgres() {

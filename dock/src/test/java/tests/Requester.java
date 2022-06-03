@@ -1,6 +1,7 @@
 package tests;
 
 import org.json.JSONObject;
+import shared.classes.FileCreator;
 import shared.testsHelper.TestHelper;
 import user.commands.*;
 
@@ -14,12 +15,21 @@ public class Requester {
 
     //static JSONObject authenticationParams = AuthParamsHandler.getUnauthorizedAuthParams();
 
-    private static JSONObject makeRequest(JSONObject body, String methodType, JSONObject uriParams) {
+    private static JSONObject makeRequest(JSONObject body, String methodType, JSONObject uriParams,boolean needsTokenPayload) {
         JSONObject request = new JSONObject();
         request.put("body", body);
         request.put("methodType", methodType);
         request.put("uriParams", uriParams);
-       
+        
+        if(needsTokenPayload) {
+            JSONObject tokenPayload=new JSONObject();
+            tokenPayload.put("id",UserAppTest.id);
+            tokenPayload.put("isArtist",UserAppTest.isArtist);
+           
+            request.put("tokenPayload",tokenPayload );
+            request.put("isAuthenticated",true);
+        }
+        System.out.println("this is the request: "+request);
         return request;
     }
 
@@ -31,55 +41,66 @@ public class Requester {
         body.put("firstname",firstName);
         body.put("lastname",lastName);
         body.put("isArtist",isArtist);
-        JSONObject request = makeRequest(body, "POST", new JSONObject());
+        JSONObject request = makeRequest(body, "POST", new JSONObject(),false);
         SignUp signUp=new SignUp();
         return new JSONObject(TestHelper.execute(signUp,request));
     }
 
-    public static JSONObject login(String username, String password) {
+    public static JSONObject login(String email, String password) {
         JSONObject body = new JSONObject();
-        body.put("username", username);
+        body.put("email", email);
         body.put("password", password);
-        JSONObject request = makeRequest(body, "POST", new JSONObject());
-        return new JSONObject(new Login().execute(request));
+        JSONObject request = makeRequest(body, "POST", new JSONObject(),false);
+        Login login=new Login();
+        return new JSONObject(TestHelper.execute(login,request));
     }
 
     public static JSONObject callViewMyProfileCommand() {
-        JSONObject request = makeRequest(new JSONObject(), "GET", new JSONObject());
+        JSONObject request = makeRequest(new JSONObject(), "GET", new JSONObject(),true);
         TestHelper.attachTokenPayLoad(UserAppTest.token,request);
         ViewMyProfile viewMyProfile=new ViewMyProfile();
         return new JSONObject(TestHelper.execute(viewMyProfile,request));
     }
 
-    public static JSONObject viewAnotherProfile(String username) {
+    public static JSONObject callViewAnotherProfile(String username) {
         JSONObject uriParams = new JSONObject().put("username", username);
-        JSONObject request = makeRequest(null, "GET", uriParams);
-        return new JSONObject(new ViewAnotherUserProfile().execute(request));
+        JSONObject request = makeRequest(null, "GET", uriParams,true);
+        ViewAnotherUserProfile viewAnotherUserProfile= new ViewAnotherUserProfile();
+        return new JSONObject(TestHelper.execute(viewAnotherUserProfile,request));
     }
 
     public static JSONObject updatePassword(String oldPassword, String newPassword) {
         JSONObject body = new JSONObject();
         body.put("oldPassword", oldPassword);
         body.put("newPassword", newPassword);
-        JSONObject request = makeRequest(body, "PUT", new JSONObject());
-        return new JSONObject(new ChangePassword().execute(request));
+        JSONObject request = makeRequest(body, "POST", new JSONObject(),true);
+       ChangePassword changePassword= new ChangePassword();
+        return new JSONObject(TestHelper.execute(changePassword,request));
     }
 
     static public JSONObject updateProfilePicture() throws IOException {
-        JSONObject request = makeRequest(new JSONObject(), "PUT", new JSONObject());
-        //JSONObject files = new JSONObject().put("image", org.sab.minio.FileSimulation.generateImageJson());
-        //request.put("files", files);
-        return new JSONObject(new EditProfilePicture().execute(request));
-    }
+        JSONObject request = makeRequest(new JSONObject(), "POST", new JSONObject(),true);
 
+        JSONObject files = new JSONObject().put("image", FileCreator.generateImageJson());
+        request.put("files", files);
+        EditProfilePicture editProfilePicture=new EditProfilePicture();
+        return new JSONObject(TestHelper.execute(editProfilePicture,request));
+    }
+    public static JSONObject subscribeToPremium(){
+        JSONObject request = makeRequest(new JSONObject(), "POST", new JSONObject(),true);
+        SubscribeToPremium subscribeToPremium=new SubscribeToPremium();
+        return new JSONObject(TestHelper.execute(subscribeToPremium,request));
+
+    }
   
 
     public static JSONObject deleteAccount(String password) {
         JSONObject body = new JSONObject();
         body.put("password", password);
 
-        JSONObject request = makeRequest(body, "DELETE", new JSONObject());
-        return new JSONObject(new DeleteAccount().execute(request));
+        JSONObject request = makeRequest(body, "POST", new JSONObject(),true);
+        DeleteAccount deleteAccount=new DeleteAccount();
+        return new JSONObject(TestHelper.execute(deleteAccount,request));
     }
 
 
